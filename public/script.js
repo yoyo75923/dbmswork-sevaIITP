@@ -614,8 +614,7 @@ async function handleRegistration(e) {
             email: document.getElementById('register-email').value,
             password: document.getElementById('register-password').value,
             full_name: document.getElementById('register-fullname').value,
-            phone: document.getElementById('register-phone').value,
-            address: document.getElementById('register-address').value
+            phone: document.getElementById('register-phone').value
         };
 
         const response = await fetch('/api/register', {

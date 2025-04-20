@@ -129,7 +129,7 @@ app.post('/api/login', async (req, res) => {
 
 app.post('/api/register', async (req, res) => {
     try {
-        const { username, password, email, full_name, phone, address } = req.body;
+        const { username, password, email, full_name, phone } = req.body;
     
         // Validate required fields
         if (!username || !password || !email || !full_name) {
@@ -160,13 +160,13 @@ app.post('/api/register', async (req, res) => {
         try {
             // Attempt to insert new user
             await pool.execute(
-                'INSERT INTO users (username, password, email, full_name, phone, address, role) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [username, password, email, full_name, phone || null, address || null, 'user']
+                'INSERT INTO users (username, password, email, full_name, phone, role) VALUES (?, ?, ?, ?, ?, ?)',
+                [username, password, email, full_name, phone || null, 'user']
             );
             
             // Check if user was created by looking up the email
             const [newUser] = await pool.execute(
-                'SELECT id, username, email, full_name, phone, address, role FROM users WHERE email = ?',
+                'SELECT id, username, email, full_name, phone, role FROM users WHERE email = ?',
                 [email]
             );
             
@@ -180,7 +180,7 @@ app.post('/api/register', async (req, res) => {
             
             // Check if user exists despite the error
             const [existingUser] = await pool.execute(
-                'SELECT id, username, email, full_name, phone, address, role FROM users WHERE email = ?',
+                'SELECT id, username, email, full_name, phone, role FROM users WHERE email = ?',
                 [email]
             );
             
