@@ -106,6 +106,12 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         showFundraising(); // Default fallback
     }
+    
+    // Check if user is admin and show admin controls
+    const userRole = localStorage.getItem('role');
+    if (userRole === 'admin') {
+        document.getElementById('adminControls').classList.remove('hidden');
+    }
 });
 
 // Navigation functions
@@ -634,4 +640,245 @@ async function handleRegistration(e) {
         showError(error.message || 'Registration failed');
     }
   }
+
+// Admin Dashboard Functions
+function showAdminDashboard() {
+    document.getElementById('adminDashboardModal').classList.remove('hidden');
+    loadAdminData();
+}
+
+function showAdminTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.admin-tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Deactivate all tabs
+    document.querySelectorAll('.admin-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    document.getElementById(`admin-${tabName}`).classList.add('active');
+    
+    // Activate selected tab
+    document.querySelector(`.admin-tab[onclick="showAdminTab('${tabName}')"]`).classList.add('active');
+    
+    // Load data for the selected tab
+    if (tabName === 'blood-camps') {
+        loadAdminBloodCamps();
+    } else if (tabName === 'blood-requests') {
+        loadAdminBloodRequests();
+    } else if (tabName === 'fundraising') {
+        loadAdminFundraising();
+    } else if (tabName === 'item-donations') {
+        loadAdminItemDonations();
+    }
+}
+
+async function loadAdminData() {
+    // Load data for the active tab
+    const activeTab = document.querySelector('.admin-tab-content.active');
+    if (activeTab) {
+        const tabId = activeTab.id;
+        if (tabId === 'admin-blood-camps') {
+            loadAdminBloodCamps();
+        } else if (tabId === 'admin-blood-requests') {
+            loadAdminBloodRequests();
+        } else if (tabId === 'admin-fundraising') {
+            loadAdminFundraising();
+        } else if (tabId === 'admin-item-donations') {
+            loadAdminItemDonations();
+        }
+    }
+}
+
+async function loadAdminBloodCamps() {
+    try {
+        const camps = await fetchWithAuth('/api/blood-camps');
+        const container = document.getElementById('admin-blood-camps-list');
+        
+        if (camps.length === 0) {
+            container.innerHTML = '<p class="no-data">No blood donation camps found.</p>';
+            return;
+        }
+        
+        container.innerHTML = camps.map(camp => `
+            <div class="admin-item">
+                <h4>${camp.title}</h4>
+                <p><strong>Location:</strong> ${camp.location}</p>
+                <p><strong>Date:</strong> ${new Date(camp.date).toLocaleDateString()}</p>
+                <p><strong>Time:</strong> ${camp.start_time} - ${camp.end_time}</p>
+                <p><strong>Blood Groups:</strong> ${camp.required_blood_groups}</p>
+                <button class="delete-btn" onclick="deleteBloodCamp(${camp.id})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading blood camps for admin:', error);
+        showError('Failed to load blood donation camps');
+    }
+}
+
+async function loadAdminBloodRequests() {
+    try {
+        const requests = await fetchWithAuth('/api/blood-requests');
+        const container = document.getElementById('admin-blood-requests-list');
+        
+        if (requests.length === 0) {
+            container.innerHTML = '<p class="no-data">No blood donation requests found.</p>';
+            return;
+        }
+        
+        container.innerHTML = requests.map(request => `
+            <div class="admin-item">
+                <h4>${request.patient_name}</h4>
+                <p><strong>Hospital:</strong> ${request.hospital_name}</p>
+                <p><strong>Blood Group:</strong> ${request.required_blood_group}</p>
+                <p><strong>Units Required:</strong> ${request.units_required}</p>
+                <p><strong>Urgency:</strong> ${request.urgency_level}</p>
+                <p><strong>Contact:</strong> ${request.contact_person} (${request.contact_number})</p>
+                <button class="delete-btn" onclick="deleteBloodRequest(${request.id})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading blood requests for admin:', error);
+        showError('Failed to load blood donation requests');
+    }
+}
+
+async function loadAdminFundraising() {
+    try {
+        const campaigns = await fetchWithAuth('/api/fundraising');
+        const container = document.getElementById('admin-fundraising-list');
+        
+        if (campaigns.length === 0) {
+            container.innerHTML = '<p class="no-data">No fundraising campaigns found.</p>';
+            return;
+        }
+        
+        container.innerHTML = campaigns.map(campaign => `
+            <div class="admin-item">
+                <h4>${campaign.title}</h4>
+                <p><strong>Category:</strong> ${campaign.category}</p>
+                <p><strong>Goal:</strong> ₹${campaign.goal_amount.toLocaleString()}</p>
+                <p><strong>Raised:</strong> ₹${campaign.current_amount.toLocaleString()}</p>
+                <p><strong>Duration:</strong> ${new Date(campaign.start_date).toLocaleDateString()} - ${new Date(campaign.end_date).toLocaleDateString()}</p>
+                <button class="delete-btn" onclick="deleteFundraisingCampaign(${campaign.id})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading fundraising campaigns for admin:', error);
+        showError('Failed to load fundraising campaigns');
+    }
+}
+
+async function loadAdminItemDonations() {
+    try {
+        const campaigns = await fetchWithAuth('/api/item-campaigns');
+        const container = document.getElementById('admin-item-donations-list');
+        
+        if (campaigns.length === 0) {
+            container.innerHTML = '<p class="no-data">No item donation campaigns found.</p>';
+            return;
+        }
+        
+        container.innerHTML = campaigns.map(campaign => `
+            <div class="admin-item">
+                <h4>${campaign.title}</h4>
+                <p><strong>Category:</strong> ${campaign.category}</p>
+                <p><strong>Location:</strong> ${campaign.location}</p>
+                <p><strong>Duration:</strong> ${new Date(campaign.start_date).toLocaleDateString()} - ${new Date(campaign.end_date).toLocaleDateString()}</p>
+                <button class="delete-btn" onclick="deleteItemCampaign(${campaign.id})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading item donation campaigns for admin:', error);
+        showError('Failed to load item donation campaigns');
+    }
+}
+
+// Delete functions
+async function deleteBloodCamp(id) {
+    if (!confirm('Are you sure you want to delete this blood donation camp? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        await fetchWithAuth(`/api/blood-camps/${id}`, {
+            method: 'DELETE'
+        });
+        
+        showError('Blood donation camp deleted successfully', 'success');
+        loadAdminBloodCamps();
+        loadBloodCamps(); // Refresh the main view
+    } catch (error) {
+        console.error('Error deleting blood camp:', error);
+        showError('Failed to delete blood donation camp');
+    }
+}
+
+async function deleteBloodRequest(id) {
+    if (!confirm('Are you sure you want to delete this blood donation request? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        await fetchWithAuth(`/api/blood-requests/${id}`, {
+            method: 'DELETE'
+        });
+        
+        showError('Blood donation request deleted successfully', 'success');
+        loadAdminBloodRequests();
+        loadBloodRequests(); // Refresh the main view
+    } catch (error) {
+        console.error('Error deleting blood request:', error);
+        showError('Failed to delete blood donation request');
+    }
+}
+
+async function deleteFundraisingCampaign(id) {
+    if (!confirm('Are you sure you want to delete this fundraising campaign? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        await fetchWithAuth(`/api/fundraising/${id}`, {
+            method: 'DELETE'
+        });
+        
+        showError('Fundraising campaign deleted successfully', 'success');
+        loadAdminFundraising();
+        loadFundraisingCampaigns(); // Refresh the main view
+    } catch (error) {
+        console.error('Error deleting fundraising campaign:', error);
+        showError('Failed to delete fundraising campaign');
+    }
+}
+
+async function deleteItemCampaign(id) {
+    if (!confirm('Are you sure you want to delete this item donation campaign? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        await fetchWithAuth(`/api/item-campaigns/${id}`, {
+            method: 'DELETE'
+        });
+        
+        showError('Item donation campaign deleted successfully', 'success');
+        loadAdminItemDonations();
+        loadItemDonations(); // Refresh the main view
+    } catch (error) {
+        console.error('Error deleting item campaign:', error);
+        showError('Failed to delete item donation campaign');
+    }
+}
   

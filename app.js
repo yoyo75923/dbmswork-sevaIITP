@@ -192,6 +192,26 @@ app.get('/api/blood-camps', authenticateUser, async (req, res) => {
     }
 });
 
+// Delete blood donation camp
+app.delete('/api/blood-camps/:id', authenticateUser, async (req, res) => {
+    try {
+        // Check if user is admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Only admin users can delete blood donation camps' });
+        }
+        
+        const campId = req.params.id;
+        
+        // Delete the camp
+        await pool.execute('DELETE FROM blood_donation_camps WHERE id = ?', [campId]);
+        
+        res.json({ message: 'Blood donation camp deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting blood camp:', err);
+        res.status(500).json({ error: 'Failed to delete blood donation camp' });
+    }
+});
+
 app.get('/api/blood-requests', authenticateUser, async (req, res) => {
     try {
         const [requests] = await pool.execute('SELECT * FROM blood_donation_requests');
@@ -199,6 +219,32 @@ app.get('/api/blood-requests', authenticateUser, async (req, res) => {
     } catch (err) {
         console.error('Error fetching blood requests:', err);
         res.status(500).json({ error: 'Failed to fetch blood requests' });
+    }
+});
+
+// Delete blood donation request
+app.delete('/api/blood-requests/:id', authenticateUser, async (req, res) => {
+    try {
+        // Check if user is admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Only admin users can delete blood donation requests' });
+        }
+        
+        const requestId = req.params.id;
+        
+        // First check if the request exists
+        const [requests] = await pool.execute('SELECT id FROM blood_donation_requests WHERE id = ?', [requestId]);
+        if (requests.length === 0) {
+            return res.status(404).json({ error: 'Blood donation request not found' });
+        }
+        
+        // Delete the request
+        await pool.execute('DELETE FROM blood_donation_requests WHERE id = ?', [requestId]);
+        
+        res.json({ message: 'Blood donation request deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting blood request:', err);
+        res.status(500).json({ error: 'Failed to delete blood donation request' });
     }
 });
 
@@ -507,6 +553,55 @@ app.delete('/api/cleanup-completed-campaigns', authenticateUser, async (req, res
     } catch (err) {
         console.error('Error cleaning up campaigns:', err);
         res.status(500).json({ error: 'Failed to clean up campaigns' });
+    }
+});
+
+// Delete fundraising campaign
+app.delete('/api/fundraising/:id', authenticateUser, async (req, res) => {
+    try {
+        // Check if user is admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Only admin users can delete fundraising campaigns' });
+        }
+        
+        const campaignId = req.params.id;
+        
+        // First check if the campaign exists
+        const [campaigns] = await pool.execute('SELECT id FROM fundraising_campaigns WHERE id = ?', [campaignId]);
+        if (campaigns.length === 0) {
+            return res.status(404).json({ error: 'Fundraising campaign not found' });
+        }
+        
+        // Delete related donations first
+        await pool.execute('DELETE FROM fundraising_donations WHERE campaign_id = ?', [campaignId]);
+        
+        // Delete the campaign
+        await pool.execute('DELETE FROM fundraising_campaigns WHERE id = ?', [campaignId]);
+        
+        res.json({ message: 'Fundraising campaign deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting fundraising campaign:', err);
+        res.status(500).json({ error: 'Failed to delete fundraising campaign' });
+    }
+});
+
+// Delete item donation campaign
+app.delete('/api/item-campaigns/:id', authenticateUser, async (req, res) => {
+    try {
+        // Check if user is admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Only admin users can delete item donation campaigns' });
+        }
+        
+        const campaignId = req.params.id;
+        
+        // Delete the campaign
+        await pool.execute('DELETE FROM item_donation_campaigns WHERE id = ?', [campaignId]);
+        
+        res.json({ message: 'Item donation campaign deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting item campaign:', err);
+        res.status(500).json({ error: 'Failed to delete item donation campaign' });
     }
 });
 

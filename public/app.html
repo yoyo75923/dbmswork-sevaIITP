@@ -387,9 +387,46 @@
 
         <!-- Admin Controls (visible only to admin users) -->
         <div id="adminControls" class="admin-controls hidden">
-            <button onclick="cleanupCompletedCampaigns()" class="admin-button">
-                <i class="fas fa-broom"></i> Clean Up Completed Campaigns
+            <button onclick="showAdminDashboard()" class="admin-button">
+                <i class="fas fa-cog"></i> Admin Dashboard
             </button>
+        </div>
+
+        <!-- Admin Dashboard Modal -->
+        <div id="adminDashboardModal" class="modal hidden">
+            <div class="modal-content admin-dashboard">
+                <h2>Admin Dashboard</h2>
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="showAdminTab('blood-camps')">Blood Donation Camps</button>
+                    <button class="admin-tab" onclick="showAdminTab('blood-requests')">Blood Requests</button>
+                    <button class="admin-tab" onclick="showAdminTab('fundraising')">Fundraising Campaigns</button>
+                    <button class="admin-tab" onclick="showAdminTab('item-donations')">Item Donations</button>
+                </div>
+                
+                <div id="admin-blood-camps" class="admin-tab-content active">
+                    <h3>Blood Donation Camps</h3>
+                    <div id="admin-blood-camps-list" class="admin-list"></div>
+                </div>
+                
+                <div id="admin-blood-requests" class="admin-tab-content">
+                    <h3>Blood Donation Requests</h3>
+                    <div id="admin-blood-requests-list" class="admin-list"></div>
+                </div>
+                
+                <div id="admin-fundraising" class="admin-tab-content">
+                    <h3>Fundraising Campaigns</h3>
+                    <div id="admin-fundraising-list" class="admin-list"></div>
+                </div>
+                
+                <div id="admin-item-donations" class="admin-tab-content">
+                    <h3>Item Donation Campaigns</h3>
+                    <div id="admin-item-donations-list" class="admin-list"></div>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="button" class="cancel-button" onclick="hideModal('adminDashboardModal')">Close</button>
+                </div>
+            </div>
         </div>
     </main>
 
