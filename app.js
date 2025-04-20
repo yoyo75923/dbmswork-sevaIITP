@@ -12,16 +12,34 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Parse Railway database URL if provided
+let dbConfig = {};
+if (process.env.DATABASE_URL) {
+    const url = new URL(process.env.DATABASE_URL);
+    dbConfig = {
+        host: url.hostname,
+        user: url.username,
+        password: url.password,
+        database: url.pathname.substring(1),
+        port: url.port,
+        ssl: {
+            rejectUnauthorized: false
+        }
+    };
+} else {
+    dbConfig = {
+        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || 'aryaman1@1',
+        database: process.env.DB_NAME || 'donation_db',
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0
+    };
+}
+
 // MySQL connection pool
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'aryaman1@1',
-    database: process.env.DB_NAME || 'donation_db',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+const pool = mysql.createPool(dbConfig);
 
 // Test database connection
 pool.getConnection()
